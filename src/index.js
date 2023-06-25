@@ -1,6 +1,7 @@
+import { homedir } from 'os';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
-const dirname = fileURLToPath(new URL('.', import.meta.url) );
 
 function greet() {
     const username = process.argv.find(element => element.match(/--username/)).split('=')[1];
@@ -30,11 +31,16 @@ function exit(username) {
 }
 
 function printDirectory() {
-    const message = `You are currently in ${dirname}`;
+    process.chdir(homedir());
+    const message = `You are currently in ${process.cwd()}`;
     console.log(message);
 }
 
 function printCommandsList() {
     
 }
-greet();
+// greet();
+const dirname = fileURLToPath(new URL('.', import.meta.url) );
+process.chdir(path.join(dirname, '../'));
+
+printDirectory()
