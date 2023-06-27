@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import crypto from 'crypto';
-import { pipeline, Transform } from 'stream';
+import stream from 'stream';
 import { fileURLToPath } from 'url';
 
 
@@ -43,8 +43,7 @@ export class FileManager  {
     }
 
     up() {
-        const dirname = fileURLToPath(new URL('.', import.meta.url) );
-        process.chdir(path.join(dirname, '../'));
+        process.chdir('..');
     }
 
     cd(pathToDir) {
@@ -103,6 +102,9 @@ export class FileManager  {
             case 'up':
                 this.up();
                 break;
+            case 'hash':
+                await this.hash(normalizePath(params[0]));
+                break;
             default:
                 this.print('Operation failed',console.error);
         } 
@@ -114,7 +116,7 @@ export class FileManager  {
 
     async addNewFile(pathToFile, content) {
         const ws = fs.createWriteStream(pathToFile, {flags: 'w+'});
-        ws.write(null);
+        ws.end('');
     }
 
     async copyFile(pathToFile, destinationDirectory) {
@@ -150,8 +152,7 @@ export class FileManager  {
                 readStream,
                 process.stdout,
                 (err) => {
-                    console.error(err.message);
-                    this.exit();
+                    console.error(err);
                 }
             );
             return;
@@ -161,7 +162,6 @@ export class FileManager  {
             writableStream,
             (err) => {
                 console.error(err.message);
-                this.exit();
             }
         );
     }
@@ -186,9 +186,10 @@ export class FileManager  {
         this.print(os.arch(), console.log);
     }
 
-    hash (pathToFile) {
+    async hash (pathToFile) {
         const rs = fs.createReadStream(pathToFile);
-        pipeline(rs, HashTransform, process.stdout);
+        const ts = new HashTransform();
+        await stream.promises.pipeline(rs, ts, process.stdout);
     }
 
 
@@ -211,7 +212,7 @@ function normalizePath(currentPath) {
     return path.normalize(currentPath);
 }
 
-class HashTransform extends Transform {
+class HashTransform extends stream.Transform {
 
     hashsum = crypto.createHash('sha256');
 

@@ -7,6 +7,6 @@ function parseUsername() {
     return username; 
 }
 
-// just run it
+// just run
 const fileManager = new FileManager(parseUsername());
 
